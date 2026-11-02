@@ -670,6 +670,8 @@
     <string name="circle_shape_title">Circle</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">Square</string>
+    <!-- label for superellipse shape option in customization picker -->
+    <string name="superellipse_shape_title">Superellipse</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
     <string name="four_sided_cookie_shape_title">4-sided cookie</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
