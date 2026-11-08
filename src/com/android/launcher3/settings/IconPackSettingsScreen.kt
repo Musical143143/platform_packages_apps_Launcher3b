@@ -6,6 +6,7 @@
 package com.android.launcher3.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -425,26 +427,119 @@ private fun IconPackPreference(
     selectedPackage: String,
     onSelectedPackageChange: (String) -> Unit,
 ) {
-    val selectedIndex = packs.indexOfFirst { it.packageName == selectedPackage } + 1
-    val state = remember(selectedPackage, packs) {
-        mutableIntStateOf(selectedIndex.coerceAtLeast(0))
+    var dialogOpen by rememberSaveable { mutableStateOf(false) }
+    var selectedPackages by remember(selectedPackage) {
+        mutableStateOf(selectedPackage.split(',').filter { it.isNotBlank() })
     }
-    val options = listOf(ListPreferenceOption(0, context.getString(R.string.icon_pack_none))) +
-        packs.mapIndexed { index, pack -> ListPreferenceOption(index + 1, pack.label) }
+    val summary = selectedPackages.mapNotNull { packageName ->
+        packs.firstOrNull { it.packageName == packageName }?.label
+    }.joinToString(", ").ifEmpty { context.getString(R.string.icon_pack_none) }
 
-    ListPreference(
-        object : ListPreferenceModel {
+    Preference(
+        object : PreferenceModel {
             override val title = context.getString(R.string.icon_pack_select_title)
-            override val options = options
-            override val selectedId = state
-            override val onIdSelected: (Int) -> Unit = { id ->
-                state.intValue = id
-                val packageName = packs.getOrNull(id - 1)?.packageName ?: ""
-                prefs.put(LauncherPrefs.ICON_PACK_PACKAGE, packageName)
-                onSelectedPackageChange(packageName)
-                LauncherAppState.getInstance(context).model
-                    .reloadIfActive("icon-pack-changed")
-            }
+            override val summary = { summary }
+            override val onClick = { dialogOpen = true }
         }
     )
+
+    if (dialogOpen) {
+        IconPackPickerSheet(
+            context = context,
+            packs = packs,
+            selectedPackages = selectedPackages,
+            onApply = { updated ->
+                selectedPackages = updated
+                val value = updated.joinToString(",")
+                prefs.put(LauncherPrefs.ICON_PACK_PACKAGE, value)
+                onSelectedPackageChange(value)
+                LauncherAppState.getInstance(context).model
+                    .reloadIfActive("icon-pack-changed")
+                dialogOpen = false
+            },
+            onDismiss = { dialogOpen = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IconPackPickerSheet(
+    context: android.content.Context,
+    packs: List<com.android.launcher3.icons.iconpack.IconPackInfo>,
+    selectedPackages: List<String>,
+    onApply: (List<String>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var selected by remember(selectedPackages, packs) {
+        mutableStateOf(selectedPackages.toList())
+    }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 0.dp,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            Text(
+                text = context.getString(R.string.icon_pack_select_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+            selected.toList().forEachIndexed { index, packageName ->
+                val pack = packs.firstOrNull { it.packageName == packageName } ?: return@forEachIndexed
+                IconPackPickerRow(
+                    pack = pack,
+                    selected = true,
+                    priority = index + 1,
+                    onToggle = { selected = selected.filterNot { it == packageName } },
+                )
+            }
+            packs.filter { it.packageName !in selected }.forEach { pack ->
+                IconPackPickerRow(
+                    pack = pack,
+                    selected = false,
+                    priority = null,
+                    onToggle = { selected = selected + pack.packageName },
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.icon_editor_cancel))
+                }
+                Button(onClick = { onApply(selected) }) {
+                    Text(stringResource(R.string.icon_editor_save))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IconPackPickerRow(
+    pack: com.android.launcher3.icons.iconpack.IconPackInfo,
+    selected: Boolean,
+    priority: Int?,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = selected, onCheckedChange = { onToggle() })
+        Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
+            Text(pack.label, style = MaterialTheme.typography.bodyLarge)
+            if (priority != null) {
+                Text(
+                    stringResource(R.string.icon_pack_priority, priority),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 }

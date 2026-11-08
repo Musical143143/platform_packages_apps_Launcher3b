@@ -435,6 +435,7 @@
     <string name="icon_pack_title">Icons</string>
     <string name="icon_pack_select_title">Icon pack</string>
     <string name="icon_pack_none">System icons</string>
+    <string name="icon_pack_priority">%1$d</string>
     <string name="icon_themed_title">Themed icons</string>
     <string name="icon_themed_summary_on">Use themed icons</string>
     <string name="icon_themed_summary_off">Use app icons</string>

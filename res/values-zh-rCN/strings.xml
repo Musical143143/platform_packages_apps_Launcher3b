@@ -181,6 +181,7 @@
     <string name="icon_pack_title">"图标"</string>
     <string name="icon_pack_select_title">"图标包"</string>
     <string name="icon_pack_none">"系统图标"</string>
+    <string name="icon_pack_priority">%1$d</string>
     <string name="icon_themed_title">"主题图标"</string>
     <string name="icon_themed_summary_on">"使用主题图标"</string>
     <string name="icon_themed_summary_off">"使用应用图标"</string>
