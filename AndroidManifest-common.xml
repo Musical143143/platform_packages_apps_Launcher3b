@@ -151,6 +151,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Full-screen Universal Search. Opened by Launcher entry points only. -->
+        <activity
+            android:name="com.android.launcher3.search.UniversalSearchActivity"
+            android:label="@string/universal_search_title"
+            android:theme="@style/HomeSettings.Theme"
+            android:exported="false"
+            android:excludeFromRecents="true" />
+
         <activity
             android:name="com.android.launcher3.icons.LauncherIconCustomizeActivity"
             android:label="@string/customize_icon"

@@ -612,6 +612,23 @@ private fun MainSettingsContent(
                         override val onClick = onOpenHiddenApps
                     }
                 )
+                Preference(
+                    model = object : PreferenceModel {
+                        override val title = context.getString(R.string.universal_search_settings_row_title)
+                        override val summary = {
+                            context.getString(R.string.universal_search_settings_row_summary)
+                        }
+                        override val icon = settingsPreferenceIcon(
+                            Icons.Outlined.Search,
+                            SettingsIconTone.Primary,
+                        )
+                        override val onClick = {
+                            context.startActivity(
+                                Intent(context, com.android.launcher3.search.UniversalSearchActivity::class.java)
+                            )
+                        }
+                    }
+                )
             }
             Category(title = context.getString(R.string.settings_dock_section)) {
                 Preference(
