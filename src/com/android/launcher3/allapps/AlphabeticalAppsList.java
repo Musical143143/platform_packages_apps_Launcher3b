@@ -37,6 +37,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.model.data.AppInfo;
@@ -46,8 +47,10 @@ import com.android.launcher3.views.ActivityContext;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -245,8 +248,9 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
         mPrivateApps.clear();
 
         // Filter against private space app that may show outside of Private Profile.
+        Set<String> hiddenApps = getHiddenAppKeys();
         Stream<AppInfo> appSteam = Stream.of(mAllAppsStore.getApps()).filter(
-                info -> !isPrivateSpaceApp(info));
+                info -> !isPrivateSpaceApp(info) && !isHiddenApp(info, hiddenApps));
         Stream<AppInfo> privateAppStream = Stream.of(mAllAppsStore.getApps());
 
         if (!hasSearchResults() && mItemFilter != null) {
@@ -281,6 +285,26 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
         if (mSearchResults.isEmpty()) {
             updateAdapterItems();
         }
+    }
+
+    /** Returns the flattened ComponentNames the user has hidden from the app drawer. */
+    private Set<String> getHiddenAppKeys() {
+        String raw = LauncherPrefs.get(mActivityContext.asContext())
+                .get(LauncherPrefs.HIDDEN_APPS);
+        Set<String> keys = new HashSet<>();
+        if (raw != null) {
+            for (String key : raw.split(",")) {
+                if (!key.isEmpty()) {
+                    keys.add(key);
+                }
+            }
+        }
+        return keys;
+    }
+
+    private static boolean isHiddenApp(AppInfo info, Set<String> hiddenKeys) {
+        return !hiddenKeys.isEmpty() && info.componentName != null
+                && hiddenKeys.contains(info.componentName.flattenToString());
     }
 
     /**

@@ -270,6 +270,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         @JvmField
         val HOTSEAT_COUNT =
             backedUpItem(DeviceGridState.KEY_HOTSEAT_COUNT, -1, EncryptionType.ENCRYPTED)
+        /** Comma-separated flattened ComponentNames of apps hidden from the app drawer. */
+        @JvmField
+        val HIDDEN_APPS = backedUpItem("hidden_apps", "", EncryptionType.ENCRYPTED)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
