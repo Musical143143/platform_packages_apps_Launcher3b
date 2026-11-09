@@ -237,11 +237,12 @@ private fun CustomizeSheet(
 ) {
     val context = LocalContext.current
     val packName = remember { LauncherPrefs.get(context).get(LauncherPrefs.ICON_PACK_PACKAGE) }
+    val packNames = remember(packName) { packName.split(',').filter { it.isNotBlank() } }
     var showIconPicker by rememberSaveable { mutableStateOf(false) }
     var editorHeightPx by remember { mutableIntStateOf(0) }
     var showCropEditor by remember { mutableStateOf(false) }
     val density = LocalDensity.current
-    val keepEditorHeight = showIconPicker && packName.isEmpty()
+    val keepEditorHeight = showIconPicker && packNames.isEmpty()
     val sheetVisibility = remember { MutableTransitionState(false) }
     var closeRequested by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -332,6 +333,7 @@ private fun CustomizeContent(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val packNames = remember(packName) { packName.split(',').filter { it.isNotBlank() } }
     val defaultTitle = remember {
         context.packageManager.getActivityInfo(key.componentName, 0).loadLabel(
             context.packageManager
@@ -349,13 +351,15 @@ private fun CustomizeContent(
     var hasIconOverride by remember(key) {
         mutableStateOf(IconOverrideRepository.hasOverride(context, key))
     }
-    var entries by remember(packName) { mutableStateOf<List<IconPackEntry>>(emptyList()) }
-    LaunchedEffect(packName, showIconPicker) {
+    var entries by remember(packNames) { mutableStateOf<List<IconPackEntry>>(emptyList()) }
+    LaunchedEffect(packNames, showIconPicker) {
         if (showIconPicker) {
             loadingIcons = true
             entries = withContext(Dispatchers.IO) {
                 runCatching {
-                    IconPackRepository.getPack(context, packName)?.getAllIcons().orEmpty()
+                    IconPackRepository.getAvailablePacks(context).flatMap { pack ->
+                        IconPackRepository.getPack(context, pack.packageName)?.getAllIcons().orEmpty()
+                    }
                 }.getOrDefault(emptyList())
             }
             loadingIcons = false
@@ -366,8 +370,8 @@ private fun CustomizeContent(
             IconOverrideRepository.getCustomImageDrawable(context, key)
                 ?: run {
                     val entry = IconOverrideRepository.get(context, key)
-                        ?: packName.takeIf { it.isNotEmpty() }?.let {
-                            IconPackRepository.getPack(context, it)?.getIcon(key.componentName)
+                        ?: packNames.firstNotNullOfOrNull { packageName ->
+                            IconPackRepository.getPack(context, packageName)?.getIcon(key.componentName)
                         }
                     entry?.let {
                         IconPackRepository.getDrawable(
@@ -462,7 +466,7 @@ private fun CustomizeContent(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
             }
-            if (packName.isEmpty()) {
+            if (IconPackRepository.getAvailablePacks(context).isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center,
@@ -505,7 +509,7 @@ private fun CustomizeContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        items(filteredEntries, key = { it.drawableName }) { entry ->
+                        items(filteredEntries, key = { "${it.packPackageName}:${it.drawableName}" }) { entry ->
                             IconPackPreview(entry) { drawable ->
                                 IconOverrideRepository.set(context, key, entry)
                                 customImage = drawable
