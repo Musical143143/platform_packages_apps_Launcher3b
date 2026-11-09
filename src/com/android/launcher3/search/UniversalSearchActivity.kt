@@ -15,12 +15,16 @@
  */
 package com.android.launcher3.search
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -123,7 +127,11 @@ private fun rankResults(
     query: String,
 ): List<UniversalSearchItem> =
     items
-        .map { it to UniversalSearchMatcher.score(query, it.title) }
+        .map { item ->
+            val titleScore = UniversalSearchMatcher.score(query, item.title)
+            val subtitleScore = item.subtitle?.let { UniversalSearchMatcher.score(query, it) } ?: 0
+            item to maxOf(titleScore, subtitleScore)
+        }
         .filter { it.second > 0 }
         .sortedWith(
             compareByDescending<Pair<UniversalSearchItem, Int>> { it.second }
@@ -139,17 +147,39 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
 
     var query by rememberSaveable { mutableStateOf("") }
-    var catalog by remember { mutableStateOf<List<UniversalSearchItem>?>(null) }
     var results by remember { mutableStateOf<List<UniversalSearchItem>>(emptyList()) }
     var recents by remember { mutableStateOf(UniversalSearchHistory.load(context)) }
 
+    var coreItems by remember { mutableStateOf<List<UniversalSearchItem>?>(null) }
+    var contactItems by remember { mutableStateOf<List<UniversalSearchItem>>(emptyList()) }
+    var contactsGranted by remember {
+        mutableStateOf(
+            context.checkSelfPermission(Manifest.permission.READ_CONTACTS) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val catalog = remember(coreItems, contactItems) { coreItems?.plus(contactItems) }
+
+    // Contacts are requested only when the user taps Allow below. Denial leaves them out.
+    val contactsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> contactsGranted = granted }
+
     LaunchedEffect(Unit) {
-        catalog = withContext(Dispatchers.IO) {
+        coreItems = withContext(Dispatchers.IO) {
             UniversalSearchCatalog.loadApplications(context) +
                 UniversalSearchCatalog.loadSettings(context)
         }
         focusRequester.requestFocus()
         keyboard?.show()
+    }
+
+    LaunchedEffect(contactsGranted) {
+        contactItems = if (contactsGranted) {
+            withContext(Dispatchers.IO) { UniversalSearchCatalog.loadContacts(context) }
+        } else {
+            emptyList()
+        }
     }
 
     // Each keystroke restarts this effect, which cancels the previous search.
@@ -198,9 +228,25 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
                     UniversalSearchHistory.clear(context)
                     recents = emptyList()
                 },
+                showContactsPrompt = !contactsGranted,
+                onAllowContacts = {
+                    contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                },
             )
-            results.isEmpty() -> NoResults()
-            else -> ResultList(results = results, onSelect = onSelect)
+            results.isEmpty() -> NoResults(
+                showContactsPrompt = !contactsGranted,
+                onAllowContacts = {
+                    contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                },
+            )
+            else -> ResultList(
+                results = results,
+                onSelect = onSelect,
+                showContactsPrompt = !contactsGranted,
+                onAllowContacts = {
+                    contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                },
+            )
         }
     }
 }
@@ -269,6 +315,8 @@ private fun RecentSearches(
     recents: List<String>,
     onPick: (String) -> Unit,
     onClear: () -> Unit,
+    showContactsPrompt: Boolean,
+    onAllowContacts: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -306,6 +354,7 @@ private fun RecentSearches(
                 }
             }
         }
+        ContactsAccessPrompt(visible = showContactsPrompt, onAllow = onAllowContacts)
         UnavailableCategoriesNote()
     }
 }
@@ -314,6 +363,8 @@ private fun RecentSearches(
 private fun ResultList(
     results: List<UniversalSearchItem>,
     onSelect: (UniversalSearchItem) -> Unit,
+    showContactsPrompt: Boolean,
+    onAllowContacts: () -> Unit,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         val grouped = results.groupBy { it.category }
@@ -331,6 +382,9 @@ private fun ResultList(
             items(categoryItems, key = { "${it.category.name}_${it.title}" }) { item ->
                 ResultRow(item = item, onClick = { onSelect(item) })
             }
+        }
+        item(key = "contacts_prompt") {
+            ContactsAccessPrompt(visible = showContactsPrompt, onAllow = onAllowContacts)
         }
         item(key = "unavailable") {
             UnavailableCategoriesNote()
@@ -368,13 +422,22 @@ private fun ResultRow(item: UniversalSearchItem, onClick: () -> Unit) {
                 )
             }
             Spacer(Modifier.width(16.dp))
-            Text(text = item.title, style = MaterialTheme.typography.bodyLarge)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = item.title, style = MaterialTheme.typography.bodyLarge)
+                item.subtitle?.let { subtitle ->
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun NoResults() {
+private fun NoResults(showContactsPrompt: Boolean, onAllowContacts: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -386,7 +449,41 @@ private fun NoResults() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(16.dp))
+        ContactsAccessPrompt(visible = showContactsPrompt, onAllow = onAllowContacts)
         UnavailableCategoriesNote()
+    }
+}
+
+/** Explains contact search and asks for READ_CONTACTS. Hidden once access is granted. */
+@Composable
+private fun ContactsAccessPrompt(visible: Boolean, onAllow: () -> Unit) {
+    if (!visible) return
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.universal_search_contacts_permission_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = stringResource(R.string.universal_search_contacts_permission_summary),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onAllow) {
+                Text(stringResource(R.string.universal_search_contacts_permission_action))
+            }
+        }
     }
 }
 

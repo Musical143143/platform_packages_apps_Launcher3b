@@ -15,25 +15,34 @@
  */
 package com.android.launcher3.search
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.Settings
 import androidx.annotation.StringRes
 import com.android.launcher3.R
 
 enum class UniversalSearchCategory(@StringRes val titleRes: Int) {
     APPLICATIONS(R.string.universal_search_category_apps),
+    CONTACTS(R.string.universal_search_category_contacts),
     SETTINGS(R.string.universal_search_category_settings),
 }
 
-/** A single search result. [icon] is set for applications only. */
+/**
+ * A single search result. [icon] is set for applications only. [subtitle] holds
+ * secondary text such as a phone number; it is also matched when searching.
+ */
 data class UniversalSearchItem(
     val category: UniversalSearchCategory,
     val title: String,
     val intent: Intent,
     val icon: Drawable? = null,
+    val subtitle: String? = null,
 )
 
 /**
@@ -98,6 +107,56 @@ object UniversalSearchCatalog {
             .distinctBy { it.intent.component }
             .sortedBy { it.title.lowercase() }
             .toList()
+    }
+
+    /**
+     * Contacts with a phone number, one result per number. Returns an empty list when
+     * READ_CONTACTS has not been granted, so nothing is read without permission.
+     */
+    fun loadContacts(context: Context): List<UniversalSearchItem> {
+        if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return emptyList()
+        }
+        val projection = arrayOf(
+            Phone.CONTACT_ID,
+            Phone.LOOKUP_KEY,
+            Phone.DISPLAY_NAME_PRIMARY,
+            Phone.NUMBER,
+        )
+        return try {
+            context.contentResolver.query(
+                Phone.CONTENT_URI,
+                projection,
+                null,
+                null,
+                "${Phone.DISPLAY_NAME_PRIMARY} COLLATE NOCASE ASC",
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(Phone.CONTACT_ID)
+                val lookupIndex = cursor.getColumnIndexOrThrow(Phone.LOOKUP_KEY)
+                val nameIndex = cursor.getColumnIndexOrThrow(Phone.DISPLAY_NAME_PRIMARY)
+                val numberIndex = cursor.getColumnIndexOrThrow(Phone.NUMBER)
+                val items = mutableListOf<UniversalSearchItem>()
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameIndex) ?: continue
+                    val contactUri = ContactsContract.Contacts.getLookupUri(
+                        cursor.getLong(idIndex),
+                        cursor.getString(lookupIndex),
+                    )
+                    items += UniversalSearchItem(
+                        category = UniversalSearchCategory.CONTACTS,
+                        title = name,
+                        intent = Intent(Intent.ACTION_VIEW, contactUri)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        subtitle = cursor.getString(numberIndex),
+                    )
+                }
+                items
+            }.orEmpty()
+        } catch (e: SecurityException) {
+            emptyList()
+        }
     }
 
     /** Android Settings pages, each opened with a standard Settings intent. */
