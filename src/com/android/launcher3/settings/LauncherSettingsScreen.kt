@@ -15,6 +15,7 @@
  */
 package com.android.launcher3.settings
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.SystemProperties
@@ -99,6 +100,7 @@ private const val DRAWER_ROUTE = "drawer"
 private const val FOLDER_ROUTE = "folder"
 private const val ICON_PACK_ROUTE = "icon_pack"
 private const val AT_A_GLANCE_ROUTE = "at_a_glance"
+private const val HIDDEN_APPS_ROUTE = "hidden_apps"
 
 @Composable
 fun LauncherSettingsScreen(startRoute: String? = null) {
@@ -176,6 +178,7 @@ fun LauncherSettingsScreen(startRoute: String? = null) {
                         onOpenDrawer = { navController.navigate(DRAWER_ROUTE) },
                          onOpenFolder = { navController.navigate(FOLDER_ROUTE) },
                          onOpenIconPack = { navController.navigate(ICON_PACK_ROUTE) },
+                        onOpenHiddenApps = { navController.navigate(HIDDEN_APPS_ROUTE) },
                     )
                 }
             }
@@ -259,6 +262,13 @@ fun LauncherSettingsScreen(startRoute: String? = null) {
                         selectedPackage = selectedIconPack,
                         onSelectedPackageChange = { selectedIconPack = it },
                     )
+                }
+            }
+            composable(HIDDEN_APPS_ROUTE) {
+                SettingsScaffold(
+                    title = context.getString(R.string.hidden_apps_title),
+                ) { padding ->
+                    HiddenAppsSettingsContent(contentPadding = padding)
                 }
             }
             composable(AT_A_GLANCE_ROUTE) {
@@ -449,6 +459,7 @@ private val SETTINGS_SEARCH_RESULTS = listOf(
     SettingsSearchResult(R.string.icon_settings_title, ICON_PACK_ROUTE, "icons icon pack theme"),
     SettingsSearchResult(R.string.home_icon_size, ICON_PACK_ROUTE, "home screen icon size"),
     SettingsSearchResult(R.string.drawer_icon_size, ICON_PACK_ROUTE, "drawer icon size"),
+    SettingsSearchResult(R.string.hidden_apps_title, HIDDEN_APPS_ROUTE, "hide apps drawer hidden"),
 )
 
 private fun settingsRouteIcon(route: String): @Composable () -> Unit = when (route) {
@@ -459,6 +470,7 @@ private fun settingsRouteIcon(route: String): @Composable () -> Unit = when (rou
     FOLDER_ROUTE -> settingsPreferenceIcon(Icons.Outlined.FolderOpen, SettingsIconTone.Secondary)
     ICON_PACK_ROUTE -> settingsPreferenceIcon(Icons.Outlined.Palette, SettingsIconTone.Tertiary)
     AT_A_GLANCE_ROUTE -> settingsPreferenceIcon(Icons.Outlined.AutoAwesome, SettingsIconTone.Primary)
+    HIDDEN_APPS_ROUTE -> settingsPreferenceIcon(Icons.Outlined.Clear, SettingsIconTone.Secondary)
     else -> settingsPreferenceIcon(Icons.Outlined.DeveloperMode, SettingsIconTone.Secondary)
 }
 
@@ -507,6 +519,7 @@ private fun MainSettingsContent(
     onOpenDrawer: () -> Unit,
     onOpenFolder: () -> Unit,
     onOpenIconPack: () -> Unit,
+    onOpenHiddenApps: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -582,6 +595,21 @@ private fun MainSettingsContent(
                             SettingsIconTone.Tertiary,
                         )
                         override val onClick = onOpenIconPack
+                    }
+                )
+            }
+            Category(title = context.getString(R.string.hidden_apps_section)) {
+                Preference(
+                    model = object : PreferenceModel {
+                        override val title = context.getString(R.string.hidden_apps_title)
+                        override val summary = {
+                            context.getString(R.string.hidden_apps_summary)
+                        }
+                        override val icon = settingsPreferenceIcon(
+                            Icons.Outlined.Clear,
+                            SettingsIconTone.Secondary,
+                        )
+                        override val onClick = onOpenHiddenApps
                     }
                 )
             }
@@ -719,4 +747,65 @@ private fun AddIconsToHomePreference(context: Context) {
                 }
             }
     )
+}
+
+private data class LaunchableApp(val key: String, val label: String)
+
+private fun loadLaunchableApps(context: Context): List<LaunchableApp> {
+    val pm = context.packageManager
+    val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+    return pm.queryIntentActivities(launcherIntent, 0)
+        .map { resolveInfo ->
+            val component = ComponentName(
+                resolveInfo.activityInfo.packageName,
+                resolveInfo.activityInfo.name,
+            )
+            LaunchableApp(component.flattenToString(), resolveInfo.loadLabel(pm).toString())
+        }
+        .distinctBy { it.key }
+        .sortedBy { it.label.lowercase() }
+}
+
+private fun readHiddenAppKeys(prefs: LauncherPrefs): Set<String> =
+    prefs.get(LauncherPrefs.HIDDEN_APPS)
+        .split(",")
+        .filter { it.isNotEmpty() }
+        .toSet()
+
+@Composable
+private fun HiddenAppsSettingsContent(contentPadding: PaddingValues) {
+    val context = LocalContext.current
+    val prefs = remember { LauncherPrefs.get(context) }
+    val apps = remember { loadLaunchableApps(context) }
+    var hiddenKeys by remember { mutableStateOf(readHiddenAppKeys(prefs)) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(contentPadding),
+    ) {
+        Category(title = context.getString(R.string.hidden_apps_section)) {
+            if (apps.isEmpty()) {
+                Preference(
+                    model = object : PreferenceModel {
+                        override val title = context.getString(R.string.hidden_apps_empty)
+                    }
+                )
+            }
+            apps.forEach { app ->
+                SwitchPreference(
+                    model = object : SwitchPreferenceModel {
+                        override val title = app.label
+                        override val checked = { app.key in hiddenKeys }
+                        override val onCheckedChange = { hide: Boolean ->
+                            val updated = if (hide) hiddenKeys + app.key else hiddenKeys - app.key
+                            hiddenKeys = updated
+                            prefs.put(LauncherPrefs.HIDDEN_APPS.to(updated.joinToString(",")))
+                        }
+                    }
+                )
+            }
+        }
+    }
 }

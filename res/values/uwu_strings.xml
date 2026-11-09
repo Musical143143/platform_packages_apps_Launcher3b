@@ -117,4 +117,10 @@
     <string name="icon_crop_cancel">Cancel crop</string>
     <string name="icon_crop_use">Use</string>
     <string name="icon_crop_instructions">Drag to move and pinch to zoom</string>
+
+    <string name="hidden_apps_title">Hidden apps</string>
+    <string name="hidden_apps_summary">Hide apps from the app drawer. They stay installed.</string>
+    <string name="hidden_apps_section">Apps</string>
+    <string name="hidden_apps_empty">No launchable apps found</string>
+    <string name="hidden_apps_switch_title">Hide from app drawer</string>
 </resources>
