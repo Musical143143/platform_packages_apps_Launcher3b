@@ -1050,6 +1050,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         updateAppCount();
         updateIosAppDrawerLayout();
+        updateSearchBarFrost();
 
         mActivityContext.getStatsLogManager().logger()
                 .withCardinality(mAllAppsStore.getApps().length)
@@ -1494,6 +1495,24 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             ((View) chips.getParent()).setVisibility(visibility);
         }
         positionSearchBarForIosDrawer(iosStyle);
+    }
+
+    /**
+     * Frosted glass for the search bar. When the device supports window blur and the launcher's
+     * blur setting is on, the view blurs what is behind it. Otherwise the translucent fill alone
+     * is shown.
+     */
+    private void updateSearchBarFrost() {
+        if (mSearchContainer == null) {
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 31 && isBackgroundBlurEnabled()) {
+            int radius = getResources().getDimensionPixelSize(
+                    R.dimen.all_apps_search_bar_blur_radius);
+            mSearchContainer.setBackgroundBlurRadius(radius);
+        } else if (android.os.Build.VERSION.SDK_INT >= 31) {
+            mSearchContainer.setBackgroundBlurRadius(0);
+        }
     }
 
     // True while the iOS-style drawer has moved the search bar to the bottom

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night mode colors for the frosted app drawer search bar. -->
+<resources>
+    <!-- Translucent dark fill and a faint light edge -->
+    <color name="all_apps_search_frost">#B8202124</color>
+    <color name="all_apps_search_frost_stroke">#33FFFFFF</color>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shorter, frosted app drawer search bar. Light mode values; night mode overrides colors. -->
+<resources>
+    <dimen name="all_apps_search_bar_height">44dp</dimen>
+    <dimen name="all_apps_search_bar_corner_radius">22dp</dimen>
+    <dimen name="all_apps_search_bar_blur_radius">24dp</dimen>
+
+    <!-- Translucent white fill and a faint edge, so the glass reads over the wallpaper -->
+    <color name="all_apps_search_frost">#B8FFFFFF</color>
+    <color name="all_apps_search_frost_stroke">#33000000</color>
+</resources>
