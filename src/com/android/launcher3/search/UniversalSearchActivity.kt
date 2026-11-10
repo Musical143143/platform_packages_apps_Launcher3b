@@ -210,7 +210,8 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
             return@LaunchedEffect
         }
         delay(SEARCH_DEBOUNCE_MS)
-        results = withContext(Dispatchers.Default) { rankResults(items, query) }
+        val ranked = withContext(Dispatchers.Default) { rankResults(items, query) }
+        results = ranked + UniversalSearchCatalog.webSearchItem(context, query.trim())
     }
 
     val openFailedMessage = stringResource(R.string.universal_search_open_failed)
@@ -437,7 +438,11 @@ private fun ResultRow(item: UniversalSearchItem, onClick: () -> Unit) {
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    imageVector = if (item.category == UniversalSearchCategory.WEB) {
+                        Icons.Outlined.Search
+                    } else {
+                        Icons.Outlined.Settings
+                    },
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(40.dp),

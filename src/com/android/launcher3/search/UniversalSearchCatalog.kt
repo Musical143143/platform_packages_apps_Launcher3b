@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.Settings
@@ -31,6 +32,7 @@ enum class UniversalSearchCategory(@StringRes val titleRes: Int) {
     APPLICATIONS(R.string.universal_search_category_apps),
     CONTACTS(R.string.universal_search_category_contacts),
     SETTINGS(R.string.universal_search_category_settings),
+    WEB(R.string.universal_search_category_web),
 }
 
 /**
@@ -160,6 +162,24 @@ object UniversalSearchCatalog {
         } catch (e: SecurityException) {
             emptyList()
         }
+    }
+
+    /**
+     * A row that runs a real web search for [query] in the browser. It is built from the
+     * typed text, so it is always offered for a non-blank query and is never a made-up result.
+     */
+    fun webSearchItem(context: Context, query: String): UniversalSearchItem {
+        val uri = Uri.Builder()
+            .scheme("https")
+            .authority("www.google.com")
+            .path("search")
+            .appendQueryParameter("q", query)
+            .build()
+        return UniversalSearchItem(
+            category = UniversalSearchCategory.WEB,
+            title = context.getString(R.string.universal_search_web_title, query),
+            intent = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
     }
 
     /** Android Settings pages, each opened with a standard Settings intent. */
