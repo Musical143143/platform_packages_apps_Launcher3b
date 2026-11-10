@@ -61,7 +61,10 @@ object UniversalSearchCatalog {
             Settings.ACTION_BLUETOOTH_SETTINGS,
         ),
         SettingsPage(R.string.universal_search_settings_display, Settings.ACTION_DISPLAY_SETTINGS),
-        SettingsPage(R.string.universal_search_settings_battery, Settings.ACTION_BATTERY_SAVER_SETTINGS),
+        SettingsPage(
+            R.string.universal_search_settings_battery,
+            Settings.ACTION_BATTERY_SAVER_SETTINGS,
+        ),
         SettingsPage(R.string.universal_search_settings_sound, Settings.ACTION_SOUND_SETTINGS),
         SettingsPage(
             R.string.universal_search_settings_storage,

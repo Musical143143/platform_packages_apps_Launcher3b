@@ -148,6 +148,12 @@
     <string name="universal_search_settings_notifications">Notifications</string>
     <string name="universal_search_settings_accessibility">Accessibility</string>
     <string name="universal_search_settings_developer">Developer options</string>
+    <string name="universal_search_categories_section">Search categories</string>
+    <string name="universal_search_privacy_section">Privacy</string>
+    <string name="universal_search_history_title">Save recent searches</string>
+    <string name="universal_search_history_summary">Keep a list of recent queries on this device.</string>
+    <string name="universal_search_open_title">Open universal search</string>
+    <string name="universal_search_open_summary">Search apps, contacts and settings.</string>
     <string name="universal_search_settings_row_title">Universal search</string>
     <string name="universal_search_settings_row_summary">Search apps and Android settings from one place.</string>
 </resources>

@@ -73,6 +73,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.util.compose.painterResource
 import com.android.settingslib.spa.framework.theme.SettingsTheme
@@ -146,9 +147,18 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
+    // Settings are read when the search opens, so changes apply to the next search.
+    val prefs = remember { LauncherPrefs.get(context) }
+    val appsEnabled = remember { prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_APPS_ENABLED) }
+    val contactsEnabled = remember { prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_CONTACTS_ENABLED) }
+    val settingsEnabled = remember { prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_SETTINGS_ENABLED) }
+    val historyEnabled = remember { prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_HISTORY_ENABLED) }
+
     var query by rememberSaveable { mutableStateOf("") }
     var results by remember { mutableStateOf<List<UniversalSearchItem>>(emptyList()) }
-    var recents by remember { mutableStateOf(UniversalSearchHistory.load(context)) }
+    var recents by remember {
+        mutableStateOf(if (historyEnabled) UniversalSearchHistory.load(context) else emptyList())
+    }
 
     var coreItems by remember { mutableStateOf<List<UniversalSearchItem>?>(null) }
     var contactItems by remember { mutableStateOf<List<UniversalSearchItem>>(emptyList()) }
@@ -158,6 +168,7 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
                 PackageManager.PERMISSION_GRANTED
         )
     }
+    val contactsPromptNeeded = contactsEnabled && !contactsGranted
     val catalog = remember(coreItems, contactItems) { coreItems?.plus(contactItems) }
 
     // Contacts are requested only when the user taps Allow below. Denial leaves them out.
@@ -167,15 +178,24 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
 
     LaunchedEffect(Unit) {
         coreItems = withContext(Dispatchers.IO) {
-            UniversalSearchCatalog.loadApplications(context) +
+            val apps = if (appsEnabled) {
+                UniversalSearchCatalog.loadApplications(context)
+            } else {
+                emptyList()
+            }
+            val settings = if (settingsEnabled) {
                 UniversalSearchCatalog.loadSettings(context)
+            } else {
+                emptyList()
+            }
+            apps + settings
         }
         focusRequester.requestFocus()
         keyboard?.show()
     }
 
     LaunchedEffect(contactsGranted) {
-        contactItems = if (contactsGranted) {
+        contactItems = if (contactsEnabled && contactsGranted) {
             withContext(Dispatchers.IO) { UniversalSearchCatalog.loadContacts(context) }
         } else {
             emptyList()
@@ -195,7 +215,9 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
 
     val openFailedMessage = stringResource(R.string.universal_search_open_failed)
     val onSelect: (UniversalSearchItem) -> Unit = { item ->
-        UniversalSearchHistory.add(context, query)
+        if (historyEnabled) {
+            UniversalSearchHistory.add(context, query)
+        }
         try {
             context.startActivity(item.intent)
             onClose()
@@ -228,13 +250,13 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
                     UniversalSearchHistory.clear(context)
                     recents = emptyList()
                 },
-                showContactsPrompt = !contactsGranted,
+                showContactsPrompt = contactsPromptNeeded,
                 onAllowContacts = {
                     contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                 },
             )
             results.isEmpty() -> NoResults(
-                showContactsPrompt = !contactsGranted,
+                showContactsPrompt = contactsPromptNeeded,
                 onAllowContacts = {
                     contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                 },
@@ -242,7 +264,7 @@ internal fun UniversalSearchScreen(onClose: () -> Unit) {
             else -> ResultList(
                 results = results,
                 onSelect = onSelect,
-                showContactsPrompt = !contactsGranted,
+                showContactsPrompt = contactsPromptNeeded,
                 onAllowContacts = {
                     contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                 },

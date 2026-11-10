@@ -81,6 +81,7 @@ import androidx.navigation.compose.rememberNavController
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.search.UniversalSearchActivity
 import com.android.launcher3.R
 import com.android.launcher3.SessionCommitReceiver
 import com.android.launcher3.util.SettingsCache
@@ -101,6 +102,7 @@ private const val FOLDER_ROUTE = "folder"
 private const val ICON_PACK_ROUTE = "icon_pack"
 private const val AT_A_GLANCE_ROUTE = "at_a_glance"
 private const val HIDDEN_APPS_ROUTE = "hidden_apps"
+private const val UNIVERSAL_SEARCH_SETTINGS_ROUTE = "universal_search_settings"
 
 @Composable
 fun LauncherSettingsScreen(startRoute: String? = null) {
@@ -179,6 +181,9 @@ fun LauncherSettingsScreen(startRoute: String? = null) {
                          onOpenFolder = { navController.navigate(FOLDER_ROUTE) },
                          onOpenIconPack = { navController.navigate(ICON_PACK_ROUTE) },
                         onOpenHiddenApps = { navController.navigate(HIDDEN_APPS_ROUTE) },
+                        onOpenUniversalSearchSettings = {
+                            navController.navigate(UNIVERSAL_SEARCH_SETTINGS_ROUTE)
+                        },
                     )
                 }
             }
@@ -262,6 +267,13 @@ fun LauncherSettingsScreen(startRoute: String? = null) {
                         selectedPackage = selectedIconPack,
                         onSelectedPackageChange = { selectedIconPack = it },
                     )
+                }
+            }
+            composable(UNIVERSAL_SEARCH_SETTINGS_ROUTE) {
+                SettingsScaffold(
+                    title = context.getString(R.string.universal_search_title),
+                ) { padding ->
+                    UniversalSearchSettingsContent(contentPadding = padding)
                 }
             }
             composable(HIDDEN_APPS_ROUTE) {
@@ -471,6 +483,8 @@ private fun settingsRouteIcon(route: String): @Composable () -> Unit = when (rou
     ICON_PACK_ROUTE -> settingsPreferenceIcon(Icons.Outlined.Palette, SettingsIconTone.Tertiary)
     AT_A_GLANCE_ROUTE -> settingsPreferenceIcon(Icons.Outlined.AutoAwesome, SettingsIconTone.Primary)
     HIDDEN_APPS_ROUTE -> settingsPreferenceIcon(Icons.Outlined.Clear, SettingsIconTone.Secondary)
+    UNIVERSAL_SEARCH_SETTINGS_ROUTE ->
+        settingsPreferenceIcon(Icons.Outlined.Search, SettingsIconTone.Primary)
     else -> settingsPreferenceIcon(Icons.Outlined.DeveloperMode, SettingsIconTone.Secondary)
 }
 
@@ -520,6 +534,7 @@ private fun MainSettingsContent(
     onOpenFolder: () -> Unit,
     onOpenIconPack: () -> Unit,
     onOpenHiddenApps: () -> Unit,
+    onOpenUniversalSearchSettings: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -614,7 +629,8 @@ private fun MainSettingsContent(
                 )
                 Preference(
                     model = object : PreferenceModel {
-                        override val title = context.getString(R.string.universal_search_settings_row_title)
+                        override val title =
+                            context.getString(R.string.universal_search_settings_row_title)
                         override val summary = {
                             context.getString(R.string.universal_search_settings_row_summary)
                         }
@@ -622,11 +638,7 @@ private fun MainSettingsContent(
                             Icons.Outlined.Search,
                             SettingsIconTone.Primary,
                         )
-                        override val onClick = {
-                            context.startActivity(
-                                Intent(context, com.android.launcher3.search.UniversalSearchActivity::class.java)
-                            )
-                        }
+                        override val onClick = onOpenUniversalSearchSettings
                     }
                 )
             }
@@ -764,6 +776,97 @@ private fun AddIconsToHomePreference(context: Context) {
                 }
             }
     )
+}
+
+/** Universal Search options. Each switch is read by the search screen on open. */
+@Composable
+private fun UniversalSearchSettingsContent(contentPadding: PaddingValues) {
+    val context = LocalContext.current
+    val prefs = remember { LauncherPrefs.get(context) }
+    var appsOn by remember {
+        mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_APPS_ENABLED))
+    }
+    var contactsOn by remember {
+        mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_CONTACTS_ENABLED))
+    }
+    var settingsOn by remember {
+        mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_SETTINGS_ENABLED))
+    }
+    var historyOn by remember {
+        mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_HISTORY_ENABLED))
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(contentPadding),
+    ) {
+        Category(title = context.getString(R.string.universal_search_categories_section)) {
+            SwitchPreference(
+                model = object : SwitchPreferenceModel {
+                    override val title = context.getString(R.string.universal_search_category_apps)
+                    override val checked = { appsOn }
+                    override val onCheckedChange = { on: Boolean ->
+                        appsOn = on
+                        prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_APPS_ENABLED.to(on))
+                    }
+                }
+            )
+            SwitchPreference(
+                model = object : SwitchPreferenceModel {
+                    override val title =
+                        context.getString(R.string.universal_search_category_contacts)
+                    override val checked = { contactsOn }
+                    override val onCheckedChange = { on: Boolean ->
+                        contactsOn = on
+                        prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_CONTACTS_ENABLED.to(on))
+                    }
+                }
+            )
+            SwitchPreference(
+                model = object : SwitchPreferenceModel {
+                    override val title =
+                        context.getString(R.string.universal_search_category_settings)
+                    override val checked = { settingsOn }
+                    override val onCheckedChange = { on: Boolean ->
+                        settingsOn = on
+                        prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_SETTINGS_ENABLED.to(on))
+                    }
+                }
+            )
+        }
+        Category(title = context.getString(R.string.universal_search_privacy_section)) {
+            SwitchPreference(
+                model = object : SwitchPreferenceModel {
+                    override val title = context.getString(R.string.universal_search_history_title)
+                    override val summary = {
+                        context.getString(R.string.universal_search_history_summary)
+                    }
+                    override val checked = { historyOn }
+                    override val onCheckedChange = { on: Boolean ->
+                        historyOn = on
+                        prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_HISTORY_ENABLED.to(on))
+                    }
+                }
+            )
+        }
+        Category(title = context.getString(R.string.universal_search_title)) {
+            Preference(
+                model = object : PreferenceModel {
+                    override val title = context.getString(R.string.universal_search_open_title)
+                    override val summary = {
+                        context.getString(R.string.universal_search_open_summary)
+                    }
+                    override val onClick = {
+                        context.startActivity(
+                            Intent(context, UniversalSearchActivity::class.java)
+                        )
+                    }
+                }
+            )
+        }
+    }
 }
 
 private data class LaunchableApp(val key: String, val label: String)

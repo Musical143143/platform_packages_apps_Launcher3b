@@ -273,6 +273,15 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Comma-separated flattened ComponentNames of apps hidden from the app drawer. */
         @JvmField
         val HIDDEN_APPS = backedUpItem("hidden_apps", "", EncryptionType.ENCRYPTED)
+        /** Universal Search: which result categories are searched. All on by default. */
+        @JvmField val UNIVERSAL_SEARCH_APPS_ENABLED = backedUpItem("universal_search_apps", true)
+        @JvmField
+        val UNIVERSAL_SEARCH_CONTACTS_ENABLED = backedUpItem("universal_search_contacts", true)
+        @JvmField
+        val UNIVERSAL_SEARCH_SETTINGS_ENABLED = backedUpItem("universal_search_settings", true)
+        /** Universal Search: whether recent queries are saved and shown. */
+        @JvmField
+        val UNIVERSAL_SEARCH_HISTORY_ENABLED = backedUpItem("universal_search_history", true)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
