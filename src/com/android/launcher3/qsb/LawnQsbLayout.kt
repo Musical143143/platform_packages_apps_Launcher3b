@@ -29,6 +29,7 @@ import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.util.Themes
+import com.android.launcher3.search.UniversalSearchActivity
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.OptionsPopupView
 import kotlin.math.roundToInt
@@ -119,6 +120,17 @@ class LawnQsbLayout @JvmOverloads constructor(
                 QsbIconId.LENS, R.drawable.ic_lens_color, themed,
                 context.getString(R.string.label_lens),
             ), true) { runCatching { context.startActivity(lensIntent) } })
+        }
+        if (prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_HOME_BUTTON)) {
+            bar.addView(iconView(QsbIconState(
+                QsbIconId.SEARCH, R.drawable.ic_allapps_search, true,
+                context.getString(R.string.universal_search_title),
+            ), true) {
+                context.startActivity(
+                    Intent(context, UniversalSearchActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            })
         }
     }
 
@@ -216,6 +228,7 @@ class LawnQsbLayout @JvmOverloads constructor(
             LauncherPrefs.HOTSEAT_QSB_ALPHA, LauncherPrefs.HOTSEAT_QSB_CORNER_RADIUS,
             LauncherPrefs.HOTSEAT_QSB_STROKE_COLOR, LauncherPrefs.HOTSEAT_QSB_STROKE_WIDTH,
             LauncherPrefs.HOTSEAT_QSB_MATCH_DRAWER, LauncherPrefs.HOTSEAT_QSB_FORCE_WEBSITE,
+            LauncherPrefs.UNIVERSAL_SEARCH_HOME_BUTTON,
         )
 
         fun getLensIntent(context: Context): Intent =

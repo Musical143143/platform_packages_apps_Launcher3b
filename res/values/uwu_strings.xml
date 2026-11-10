@@ -150,6 +150,9 @@
     <string name="universal_search_settings_developer">Developer options</string>
     <string name="universal_search_categories_section">Search categories</string>
     <string name="universal_search_privacy_section">Privacy</string>
+    <string name="universal_search_home_section">Home screen</string>
+    <string name="universal_search_home_button_title">Search button on home bar</string>
+    <string name="universal_search_home_button_summary">Show a Universal search button at the end of the home screen search bar.</string>
     <string name="universal_search_history_title">Save recent searches</string>
     <string name="universal_search_history_summary">Keep a list of recent queries on this device.</string>
     <string name="universal_search_open_title">Open universal search</string>

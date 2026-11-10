@@ -282,6 +282,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Universal Search: whether recent queries are saved and shown. */
         @JvmField
         val UNIVERSAL_SEARCH_HISTORY_ENABLED = backedUpItem("universal_search_history", true)
+        /** Shows a Universal Search button at the end of the home screen search bar. */
+        @JvmField
+        val UNIVERSAL_SEARCH_HOME_BUTTON = backedUpItem("universal_search_home_button", true)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)

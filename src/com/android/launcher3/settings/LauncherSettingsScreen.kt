@@ -795,6 +795,9 @@ private fun UniversalSearchSettingsContent(contentPadding: PaddingValues) {
     var historyOn by remember {
         mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_HISTORY_ENABLED))
     }
+    var homeButtonOn by remember {
+        mutableStateOf(prefs.get(LauncherPrefs.UNIVERSAL_SEARCH_HOME_BUTTON))
+    }
 
     Column(
         modifier = Modifier
@@ -832,6 +835,22 @@ private fun UniversalSearchSettingsContent(contentPadding: PaddingValues) {
                     override val onCheckedChange = { on: Boolean ->
                         settingsOn = on
                         prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_SETTINGS_ENABLED.to(on))
+                    }
+                }
+            )
+        }
+        Category(title = context.getString(R.string.universal_search_home_section)) {
+            SwitchPreference(
+                model = object : SwitchPreferenceModel {
+                    override val title =
+                        context.getString(R.string.universal_search_home_button_title)
+                    override val summary = {
+                        context.getString(R.string.universal_search_home_button_summary)
+                    }
+                    override val checked = { homeButtonOn }
+                    override val onCheckedChange = { on: Boolean ->
+                        homeButtonOn = on
+                        prefs.put(LauncherPrefs.UNIVERSAL_SEARCH_HOME_BUTTON.to(on))
                     }
                 }
             )
