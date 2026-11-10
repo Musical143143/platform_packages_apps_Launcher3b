@@ -55,7 +55,7 @@ public class LetterListTextView extends TextView {
         mLetterBackground = context.getDrawable(R.drawable.bg_letter_list_text);
         mLetterListTextWidthAndHeight = context.getResources().getDimensionPixelSize(
                 R.dimen.fastscroll_list_letter_size);
-        mTextColor = context.getColor(R.color.materialColorOnSurface);
+        mTextColor = context.getColor(R.color.materialColorOnSurfaceVariant);
     }
 
     @Override
