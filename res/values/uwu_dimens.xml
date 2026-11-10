@@ -6,4 +6,6 @@
     <dimen name="uwu_qsb_widget_vertical_padding">6dp</dimen>
     <dimen name="uwu_qsb_icon_width">56dp</dimen>
     <dimen name="uwu_qsb_icon_padding">10dp</dimen>
+    <!-- Top corner radius of the app drawer sheet. Larger than the dialog radius, as in ColorOS. -->
+    <dimen name="all_apps_sheet_corner_radius">32dp</dimen>
 </resources>

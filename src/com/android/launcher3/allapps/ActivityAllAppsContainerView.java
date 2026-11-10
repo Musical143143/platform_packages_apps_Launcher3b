@@ -302,7 +302,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mAH.get(SEARCH).setup(mSearchRecyclerView,
                 /* Filter out A-Z apps */ itemInfo -> false);
         rebindAdapters(true /* force */);
-        float cornerRadius = Themes.getDialogCornerRadius(getContext());
+        float cornerRadius = getResources().getDimension(R.dimen.all_apps_sheet_corner_radius);
         mBottomSheetCornerRadii = new float[]{
                 cornerRadius,
                 cornerRadius, // Top left radius in px
