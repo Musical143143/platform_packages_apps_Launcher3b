@@ -22,6 +22,7 @@ import android.content.res.TypedArray
 import android.graphics.Point
 import android.util.DisplayMetrics
 import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.calculateTextHeight
 import com.android.launcher3.Utilities.getIconVisibleSizePx
@@ -309,11 +310,22 @@ data class FolderProfile(
             )
         }
 
+        /**
+         * Folder size chosen in settings. Medium is 1, so the layout is unchanged by default.
+         * Small and large scale the folder's icons, text and spacing together.
+         */
+        private fun folderSizeMultiplier(context: Context): Float =
+            when (LauncherPrefs.get(context).get(LauncherPrefs.FOLDER_SIZE)) {
+                0 -> 0.85f
+                2 -> 1.15f
+                else -> 1f
+            }
+
         fun createFolderProfile(
             context: Context,
             isResponsive: Boolean,
             isScalable: Boolean,
-            scale: Float,
+            baseScale: Float,
             metrics: DisplayMetrics,
             inv: InvariantDeviceProfile,
             typeIndex: Int,
@@ -324,6 +336,7 @@ data class FolderProfile(
             iconSizeSteps: IconSizeSteps,
             workspaceProfile: WorkspaceProfile,
         ): FolderProfile {
+            val scale = baseScale * folderSizeMultiplier(context)
             return when {
                 (isResponsive &&
                     responsiveFolderHeightSpec != null &&

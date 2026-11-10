@@ -644,6 +644,7 @@ private fun MainSettingsContent(
                 IosAppDrawerPreference(context)
                 StackedRecentsPreference(context)
                 FolderStylePreference(context)
+                FolderSizePreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -720,6 +721,36 @@ private fun NotificationDotsPreference(context: Context) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                 }
             }
+    )
+}
+
+@Composable
+private fun FolderSizePreference(context: Context) {
+    var size by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.FOLDER_SIZE))
+    }
+    val sizeNames = listOf(
+        context.getString(R.string.folder_size_small),
+        context.getString(R.string.folder_size_medium),
+        context.getString(R.string.folder_size_large),
+    )
+
+    // Each tap moves to the next size. The change rebuilds the layout, so it goes through
+    // applyLauncherSetting, which refreshes the device profile.
+    OneUiPreference(
+        model = object : PreferenceModel {
+            override val title = context.getString(R.string.folder_size_title)
+            override val summary = { sizeNames[size.coerceIn(0, sizeNames.lastIndex)] }
+            override val icon = settingsPreferenceIcon(
+                Icons.Outlined.Search,
+                SettingsIconTone.Tertiary,
+            )
+            override val onClick = {
+                val next = (size + 1) % sizeNames.size
+                applyLauncherSetting(context, LauncherPrefs.FOLDER_SIZE.to(next))
+                size = next
+            }
+        }
     )
 }
 

@@ -126,6 +126,10 @@
     <string name="stacked_recents_title">Stacked recent apps</string>
     <string name="stacked_recents_summary">Draw recent app cards further back smaller, so they read as a stack. Off by default.</string>
     <string name="folder_style_title">Folder style</string>
+    <string name="folder_size_title">Folder size</string>
+    <string name="folder_size_small">Small</string>
+    <string name="folder_size_medium">Medium</string>
+    <string name="folder_size_large">Large</string>
     <string name="folder_style_default">Default</string>
     <string name="folder_style_coloros">ColorOS frosted</string>
     <string name="folder_style_oxygenos">OxygenOS solid</string>

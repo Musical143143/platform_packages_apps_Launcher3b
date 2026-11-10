@@ -294,6 +294,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Folder look: 0 keeps the theme, 1 is ColorOS frosted, 2 is OxygenOS solid. */
         @JvmField
         val FOLDER_STYLE = backedUpItem("folder_style", 0)
+        /** Folder size: 0 small, 1 medium (the default), 2 large. */
+        @JvmField
+        val FOLDER_SIZE = backedUpItem("folder_size", 1)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
