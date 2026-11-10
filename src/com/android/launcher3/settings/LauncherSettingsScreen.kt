@@ -643,7 +643,7 @@ private fun MainSettingsContent(
                 )
                 IosAppDrawerPreference(context)
                 StackedRecentsPreference(context)
-                FrostedFoldersPreference(context)
+                FolderStylePreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -724,23 +724,29 @@ private fun NotificationDotsPreference(context: Context) {
 }
 
 @Composable
-private fun FrostedFoldersPreference(context: Context) {
-    var enabled by remember(context) {
-        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.FROSTED_FOLDERS))
+private fun FolderStylePreference(context: Context) {
+    var style by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.FOLDER_STYLE))
     }
+    val styleNames = listOf(
+        context.getString(R.string.folder_style_default),
+        context.getString(R.string.folder_style_coloros),
+        context.getString(R.string.folder_style_oxygenos),
+    )
 
-    OneUiSwitchPreference(
-        model = object : SwitchPreferenceModel {
-            override val title = context.getString(R.string.frosted_folders_title)
-            override val summary = { context.getString(R.string.frosted_folders_summary) }
+    // Each tap moves to the next style, so the choice needs no extra screen.
+    OneUiPreference(
+        model = object : PreferenceModel {
+            override val title = context.getString(R.string.folder_style_title)
+            override val summary = { styleNames[style.coerceIn(0, styleNames.lastIndex)] }
             override val icon = settingsPreferenceIcon(
                 Icons.Outlined.Search,
                 SettingsIconTone.Tertiary,
             )
-            override val checked = { enabled }
-            override val onCheckedChange = { newChecked: Boolean ->
-                LauncherPrefs.get(context).put(LauncherPrefs.FROSTED_FOLDERS, newChecked)
-                enabled = newChecked
+            override val onClick = {
+                val next = (style + 1) % styleNames.size
+                LauncherPrefs.get(context).put(LauncherPrefs.FOLDER_STYLE, next)
+                style = next
             }
         }
     )

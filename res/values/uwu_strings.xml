@@ -125,8 +125,10 @@
     <string name="ios_app_drawer_summary">Group apps by category under headings. Hides the A–Z index and category chips.</string>
     <string name="stacked_recents_title">Stacked recent apps</string>
     <string name="stacked_recents_summary">Draw recent app cards further back smaller, so they read as a stack. Off by default.</string>
-    <string name="frosted_folders_title">Frosted home screen folders</string>
-    <string name="frosted_folders_summary">Give folder backgrounds the same frosted glass look as the search bar. Off by default.</string>
+    <string name="folder_style_title">Folder style</string>
+    <string name="folder_style_default">Default</string>
+    <string name="folder_style_coloros">ColorOS frosted</string>
+    <string name="folder_style_oxygenos">OxygenOS solid</string>
     <string name="hidden_apps_empty">No launchable apps found</string>
     <string name="hidden_apps_switch_title">Hide from app drawer</string>
 

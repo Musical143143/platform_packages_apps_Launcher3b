@@ -291,9 +291,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Stacked recents: cards further from the current page are drawn a little smaller. */
         @JvmField
         val STACKED_RECENTS = backedUpItem("stacked_recents", false)
-        /** Frosted glass folder background, with blur on Android 12 and later when enabled. */
+        /** Folder look: 0 keeps the theme, 1 is ColorOS frosted, 2 is OxygenOS solid. */
         @JvmField
-        val FROSTED_FOLDERS = backedUpItem("frosted_folders", false)
+        val FOLDER_STYLE = backedUpItem("folder_style", 0)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
