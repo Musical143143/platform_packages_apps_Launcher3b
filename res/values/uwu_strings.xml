@@ -127,6 +127,8 @@
     <string name="stacked_recents_summary">Draw recent app cards further back smaller, so they read as a stack. Off by default.</string>
     <string name="folder_style_title">Folder style</string>
     <string name="folder_size_title">Folder size</string>
+    <string name="coloros_app_animations_title">ColorOS-style app animations</string>
+    <string name="coloros_app_animations_summary">Open apps with a softer curve and close them a little faster. Off by default.</string>
     <string name="folder_size_small">Small</string>
     <string name="folder_size_medium">Medium</string>
     <string name="folder_size_large">Large</string>

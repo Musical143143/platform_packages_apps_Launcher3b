@@ -220,6 +220,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     public static final int RECENTS_LAUNCH_DURATION = 336;
     private static final int LAUNCHER_RESUME_START_DELAY = 100;
     private static final int CLOSING_TRANSITION_DURATION_MS = 250;
+    // Shorter close for the ColorOS-style app animations setting
+    private static final int COLOROS_CLOSING_TRANSITION_DURATION_MS = 220;
     public static final int SPLIT_LAUNCH_DURATION = 370;
     public static final int SPLIT_DIVIDER_ANIM_DURATION = 100;
 
@@ -300,6 +302,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private final Interpolator mOpeningXInterpolator;
     private final Interpolator mOpeningInterpolator;
+    private final boolean mColorOsAnimations;
+    private final int mClosingDuration;
 
     private final SystemUiProxy mSystemUiProxy;
 
@@ -362,8 +366,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         mOpeningXInterpolator = AnimationUtils.loadInterpolator(
                 launcher, R.interpolator.app_open_x);
-        mOpeningInterpolator = AnimationUtils.loadInterpolator(
-                launcher, R.interpolator.emphasized_interpolator);
+        mColorOsAnimations = LauncherPrefs.get(launcher).get(LauncherPrefs.COLOROS_APP_ANIMATIONS);
+        mClosingDuration = mColorOsAnimations
+                ? COLOROS_CLOSING_TRANSITION_DURATION_MS
+                : CLOSING_TRANSITION_DURATION_MS;
+        mOpeningInterpolator = mColorOsAnimations
+                ? DECELERATE_1_7
+                : AnimationUtils.loadInterpolator(launcher, R.interpolator.emphasized_interpolator);
         mLatencyTracker = LatencyTracker.getInstance(launcher);
 
         mMaxBlurRadius = res.getDimensionPixelSize(
@@ -390,7 +399,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 }
             } else {
                 CrossDisplayMoveTransition.startCrossDisplayMoveAnimation(mLauncher,
-                        APP_LAUNCH_DURATION, CLOSING_TRANSITION_DURATION_MS, info, t,
+                        APP_LAUNCH_DURATION, mClosingDuration, info, t,
                         finishCallback);
             }
         });

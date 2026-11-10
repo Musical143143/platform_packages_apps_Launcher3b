@@ -645,6 +645,7 @@ private fun MainSettingsContent(
                 StackedRecentsPreference(context)
                 FolderStylePreference(context)
                 FolderSizePreference(context)
+                ColorOsAnimationsPreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -721,6 +722,30 @@ private fun NotificationDotsPreference(context: Context) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                 }
             }
+    )
+}
+
+@Composable
+private fun ColorOsAnimationsPreference(context: Context) {
+    var enabled by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.COLOROS_APP_ANIMATIONS))
+    }
+
+    OneUiSwitchPreference(
+        model = object : SwitchPreferenceModel {
+            override val title = context.getString(R.string.coloros_app_animations_title)
+            override val summary = { context.getString(R.string.coloros_app_animations_summary) }
+            override val icon = settingsPreferenceIcon(
+                Icons.Outlined.Search,
+                SettingsIconTone.Tertiary,
+            )
+            override val checked = { enabled }
+            override val onCheckedChange = { newChecked: Boolean ->
+                // Opening and closing timing is read when the launcher starts, so this recreates it.
+                applyLauncherSetting(context, LauncherPrefs.COLOROS_APP_ANIMATIONS.to(newChecked))
+                enabled = newChecked
+            }
+        }
     )
 }
 

@@ -297,6 +297,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Folder size: 0 small, 1 medium (the default), 2 large. */
         @JvmField
         val FOLDER_SIZE = backedUpItem("folder_size", 1)
+        /** Opens apps with a decelerating curve and a shorter close, in the ColorOS style. */
+        @JvmField
+        val COLOROS_APP_ANIMATIONS = backedUpItem("coloros_app_animations", false)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
