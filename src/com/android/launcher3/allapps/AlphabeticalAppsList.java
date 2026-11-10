@@ -27,6 +27,8 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_PRIVATE_SPACE_USER_INSTALLED_APPS_COUNT;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
@@ -47,6 +49,7 @@ import com.android.launcher3.views.ActivityContext;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -117,6 +120,8 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
     private int mNumAppsPerRowAllApps;
     private int mNumAppRowsInAdapter;
     private Predicate<ItemInfo> mItemFilter;
+    private AllAppsCategory mCategory = AllAppsCategory.ALL;
+    private final Map<String, Integer> mPackageCategories = new HashMap<>();
 
     public AlphabeticalAppsList(ActivityContext activityContext, @Nullable AllAppsStore appsStore,
             WorkProfileManager workProfileManager, PrivateProfileManager privateProfileManager) {
@@ -146,6 +151,46 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
     /** Set the number of apps per row when device profile changes. */
     public void setNumAppsPerRowAllApps(int numAppsPerRow) {
         mNumAppsPerRowAllApps = numAppsPerRow;
+    }
+
+    /** Selects the category chip whose apps are shown. {@link AllAppsCategory#ALL} shows all. */
+    public void setCategory(AllAppsCategory category) {
+        mCategory = category;
+        onAppsUpdated();
+    }
+
+    public AllAppsCategory getCategory() {
+        return mCategory;
+    }
+
+    /** Number of apps currently listed (after hidden-app and category filters). */
+    public int getAppCount() {
+        return mApps.size();
+    }
+
+    private boolean matchesCategory(AppInfo info) {
+        if (mCategory == AllAppsCategory.ALL) {
+            return true;
+        }
+        if (info.componentName == null) {
+            return mCategory == AllAppsCategory.OTHERS;
+        }
+        String packageName = info.componentName.getPackageName();
+        Integer category = mPackageCategories.get(packageName);
+        if (category == null) {
+            category = lookupApplicationCategory(packageName);
+            mPackageCategories.put(packageName, category);
+        }
+        return AllAppsCategory.fromApplicationCategory(category) == mCategory;
+    }
+
+    private int lookupApplicationCategory(String packageName) {
+        try {
+            return mActivityContext.asContext().getPackageManager()
+                    .getApplicationInfo(packageName, 0).category;
+        } catch (PackageManager.NameNotFoundException e) {
+            return ApplicationInfo.CATEGORY_UNDEFINED;
+        }
     }
 
     public void updateItemFilter(Predicate<ItemInfo> itemFilter) {
@@ -250,7 +295,8 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
         // Filter against private space app that may show outside of Private Profile.
         Set<String> hiddenApps = getHiddenAppKeys();
         Stream<AppInfo> appSteam = Stream.of(mAllAppsStore.getApps()).filter(
-                info -> !isPrivateSpaceApp(info) && !isHiddenApp(info, hiddenApps));
+                info -> !isPrivateSpaceApp(info) && !isHiddenApp(info, hiddenApps)
+                        && matchesCategory(info));
         Stream<AppInfo> privateAppStream = Stream.of(mAllAppsStore.getApps());
 
         if (!hasSearchResults() && mItemFilter != null) {

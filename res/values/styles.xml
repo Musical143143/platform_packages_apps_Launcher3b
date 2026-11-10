@@ -583,4 +583,18 @@
         <item name="android:windowAnimationStyle">@android:style/Animation</item>
         <item name="android:windowShowWallpaper">false</item>
     </style>
+
+    <style name="AllAppsCategoryChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/all_apps_category_chip_background</item>
+        <item name="android:textColor">@color/all_apps_category_chip_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
 </resources>

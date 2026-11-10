@@ -52,6 +52,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.WindowInsets;
@@ -272,6 +273,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mAdditionalHeaderRows.addAll(getAdditionalHeaderRows());
         mBottomSheetBackground = findViewById(R.id.bottom_sheet_background);
         mBottomSheetHandleArea = findViewById(R.id.bottom_sheet_handle_area);
+        setupCategoryChips();
         mSearchRecyclerView = findViewById(R.id.search_results_list_view);
         mFastScroller = findViewById(R.id.fast_scroller);
         mFastScroller.setPopupView(findViewById(R.id.fast_scroller_popup));
@@ -1044,6 +1046,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mHasPrivateApps) {
             mPrivateProfileManager.reset();
         }
+        updateAppCount();
 
         mActivityContext.getStatsLogManager().logger()
                 .withCardinality(mAllAppsStore.getApps().length)
@@ -1422,6 +1425,62 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
     public AlphabeticalAppsList getPersonalAppList() {
         return mAH.get(MAIN).mAppsList;
+    }
+
+    private static final int[] CATEGORY_CHIP_IDS = {
+            R.id.chip_all,
+            R.id.chip_communication,
+            R.id.chip_entertainment,
+            R.id.chip_tools,
+            R.id.chip_others,
+    };
+
+    /** Wires the category chips in the header. Each chip filters the personal app list. */
+    private void setupCategoryChips() {
+        AllAppsCategory[] categories = AllAppsCategory.values();
+        for (int i = 0; i < CATEGORY_CHIP_IDS.length; i++) {
+            View chip = findViewById(CATEGORY_CHIP_IDS[i]);
+            if (chip == null) {
+                continue;
+            }
+            AllAppsCategory category = categories[i];
+            chip.setOnClickListener(v -> selectCategory(category));
+        }
+        updateCategoryChipState(AllAppsCategory.ALL);
+    }
+
+    private void selectCategory(AllAppsCategory category) {
+        AlphabeticalAppsList list = getPersonalAppListOrNull();
+        if (list != null) {
+            list.setCategory(category);
+        }
+        updateCategoryChipState(category);
+        updateAppCount();
+    }
+
+    private void updateCategoryChipState(AllAppsCategory selected) {
+        AllAppsCategory[] categories = AllAppsCategory.values();
+        for (int i = 0; i < CATEGORY_CHIP_IDS.length; i++) {
+            View chip = findViewById(CATEGORY_CHIP_IDS[i]);
+            if (chip != null) {
+                chip.setSelected(categories[i] == selected);
+            }
+        }
+    }
+
+    /** Updates the "N apps" line under the title. Safe to call before the list exists. */
+    private void updateAppCount() {
+        TextView countView = findViewById(R.id.all_apps_count);
+        AlphabeticalAppsList list = getPersonalAppListOrNull();
+        if (countView == null || list == null) {
+            return;
+        }
+        int count = list.getAppCount();
+        countView.setText(getResources().getQuantityString(R.plurals.all_apps_count, count, count));
+    }
+
+    private AlphabeticalAppsList getPersonalAppListOrNull() {
+        return mAH.get(MAIN) == null ? null : getPersonalAppList();
     }
 
     public AlphabeticalAppsList getWorkAppList() {

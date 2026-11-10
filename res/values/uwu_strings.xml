@@ -159,4 +159,14 @@
     <string name="universal_search_open_summary">Search apps, contacts and settings.</string>
     <string name="universal_search_settings_row_title">Universal search</string>
     <string name="universal_search_settings_row_summary">Search apps and Android settings from one place.</string>
+    <string name="all_apps_title">All apps</string>
+    <string name="all_apps_category_all">All</string>
+    <string name="all_apps_category_communication">Communication</string>
+    <string name="all_apps_category_entertainment">Entertainment</string>
+    <string name="all_apps_category_tools">Tools</string>
+    <string name="all_apps_category_others">Others</string>
+    <plurals name="all_apps_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
 </resources>

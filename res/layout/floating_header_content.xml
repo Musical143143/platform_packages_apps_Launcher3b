@@ -13,4 +13,73 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<merge />
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- All apps title and live app count, shown above the category chips. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/all_apps_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/all_apps_title"
+            android:textColor="@color/materialColorOnSurface"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/all_apps_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/materialColorOnSurfaceVariant"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Category filter chips. Each chip filters the app list; the selected chip is primary. -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/all_apps_category_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chip_all"
+                style="@style/AllAppsCategoryChip"
+                android:text="@string/all_apps_category_all" />
+
+            <TextView
+                android:id="@+id/chip_communication"
+                style="@style/AllAppsCategoryChip"
+                android:text="@string/all_apps_category_communication" />
+
+            <TextView
+                android:id="@+id/chip_entertainment"
+                style="@style/AllAppsCategoryChip"
+                android:text="@string/all_apps_category_entertainment" />
+
+            <TextView
+                android:id="@+id/chip_tools"
+                style="@style/AllAppsCategoryChip"
+                android:text="@string/all_apps_category_tools" />
+
+            <TextView
+                android:id="@+id/chip_others"
+                style="@style/AllAppsCategoryChip"
+                android:text="@string/all_apps_category_others" />
+        </LinearLayout>
+    </HorizontalScrollView>
+</merge>
