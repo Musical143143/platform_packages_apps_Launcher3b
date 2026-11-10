@@ -1772,9 +1772,19 @@ constructor(
 
     fun getSizeAdjustment(fullscreenEnabled: Boolean) = if (fullscreenEnabled) nonGridScale else 1f
 
+    /** Depth scale for the stacked recents layout. 1 leaves the card unchanged. */
+    var stackDepthScale: Float = 1f
+        set(value) {
+            if (field != value) {
+                field = value
+                applyScale()
+            }
+        }
+
     private fun applyScale() {
         val scale =
             persistentScale *
+                stackDepthScale *
                 dismissScale *
                 animateToIconScale *
                 Utilities.mapRange(modalness, 1f, modalScale)

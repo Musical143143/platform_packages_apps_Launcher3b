@@ -288,6 +288,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Groups apps by category under headers, with no chips or A-Z index. */
         @JvmField
         val IOS_APP_DRAWER = backedUpItem("ios_app_drawer", false)
+        /** Stacked recents: cards further from the current page are drawn a little smaller. */
+        @JvmField
+        val STACKED_RECENTS = backedUpItem("stacked_recents", false)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)

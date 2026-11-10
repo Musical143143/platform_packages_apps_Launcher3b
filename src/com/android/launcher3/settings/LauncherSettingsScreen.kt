@@ -642,6 +642,7 @@ private fun MainSettingsContent(
                     }
                 )
                 IosAppDrawerPreference(context)
+                StackedRecentsPreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -718,6 +719,29 @@ private fun NotificationDotsPreference(context: Context) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                 }
             }
+    )
+}
+
+@Composable
+private fun StackedRecentsPreference(context: Context) {
+    var enabled by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.STACKED_RECENTS))
+    }
+
+    OneUiSwitchPreference(
+        model = object : SwitchPreferenceModel {
+            override val title = context.getString(R.string.stacked_recents_title)
+            override val summary = { context.getString(R.string.stacked_recents_summary) }
+            override val icon = settingsPreferenceIcon(
+                Icons.Outlined.Search,
+                SettingsIconTone.Tertiary,
+            )
+            override val checked = { enabled }
+            override val onCheckedChange = { newChecked: Boolean ->
+                LauncherPrefs.get(context).put(LauncherPrefs.STACKED_RECENTS, newChecked)
+                enabled = newChecked
+            }
+        }
     )
 }
 

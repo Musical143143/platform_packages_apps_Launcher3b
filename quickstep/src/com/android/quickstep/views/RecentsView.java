@@ -215,6 +215,7 @@ import com.android.quickstep.util.SurfaceTransactionApplier;
 import com.android.quickstep.util.TaskGridNavHelper;
 import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.util.TaskVisualsChangeListener;
+import com.android.launcher3.LauncherPrefs;
 import com.android.quickstep.util.TransformParams;
 import com.android.quickstep.util.VibrationConstants;
 import com.android.quickstep.window.RecentsWindowManager;
@@ -3889,7 +3890,32 @@ public abstract class RecentsView<
         updatePageOffsets();
     }
 
+    /**
+     * Stacked recents (opt-in, off by default): cards further from the current page are drawn a
+     * little smaller so the list reads as a stack. Grid mode is left alone.
+     */
+    private void updateStackDepth() {
+        boolean stacked = LauncherPrefs.get(getContext()).get(LauncherPrefs.STACKED_RECENTS)
+                && !showAsGrid();
+        int current = getCurrentPage();
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (!(child instanceof TaskView)) {
+                continue;
+            }
+            float depthScale = 1f;
+            if (stacked) {
+                int depth = Math.abs(i - current);
+                // Each step back shrinks the card by 4%, down to 84%.
+                depthScale = Math.max(0.84f, 1f - 0.04f * depth);
+            }
+            ((TaskView) child).setStackDepthScale(depthScale);
+        }
+    }
+
     private void updatePageOffsets() {
+        updateStackDepth();
         float offset = mAdjacentPageHorizontalOffset;
         float modalOffset = ACCELERATE_0_75.getInterpolation(mTaskModalness);
         int count = getChildCount();
