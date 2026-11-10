@@ -548,10 +548,10 @@ private fun MainSettingsContent(
         if (searchQuery.isNotBlank()) {
             SettingsSearchResults(searchQuery, onOpenRoute)
         } else {
-            Category(title = context.getString(R.string.settings_general_section)) {
+            OneUiCategory(title = context.getString(R.string.settings_general_section)) {
                 NotificationDotsPreference(context)
                 if (BuildConfig.IS_STUDIO_BUILD || developerOptionsEnabled) {
-                    Preference(
+                    OneUiPreference(
                         model = object : PreferenceModel {
                             override val title = context.getString(R.string.developer_options_title)
                             override val icon = settingsPreferenceIcon(
@@ -568,9 +568,9 @@ private fun MainSettingsContent(
                 }
                 NavigationBarHintPreference(context)
             }
-            Category(title = context.getString(R.string.settings_home_screen_section)) {
+            OneUiCategory(title = context.getString(R.string.settings_home_screen_section)) {
                 AddIconsToHomePreference(context)
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.at_a_glance_title)
                         override val icon = settingsPreferenceIcon(
@@ -580,7 +580,7 @@ private fun MainSettingsContent(
                         override val onClick = { onOpenRoute(AT_A_GLANCE_ROUTE) }
                     }
                 )
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.home_screen_grid)
                         override val icon = settingsPreferenceIcon(
@@ -590,7 +590,7 @@ private fun MainSettingsContent(
                         override val onClick = onOpenGrid
                     }
                 )
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.folder_settings)
                         override val icon = settingsPreferenceIcon(
@@ -601,8 +601,8 @@ private fun MainSettingsContent(
                     }
                 )
             }
-            Category(title = context.getString(R.string.settings_icons_section)) {
-                Preference(
+            OneUiCategory(title = context.getString(R.string.settings_icons_section)) {
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.icon_settings_title)
                         override val icon = settingsPreferenceIcon(
@@ -613,8 +613,8 @@ private fun MainSettingsContent(
                     }
                 )
             }
-            Category(title = context.getString(R.string.hidden_apps_section)) {
-                Preference(
+            OneUiCategory(title = context.getString(R.string.hidden_apps_section)) {
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.hidden_apps_title)
                         override val summary = {
@@ -627,7 +627,7 @@ private fun MainSettingsContent(
                         override val onClick = onOpenHiddenApps
                     }
                 )
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title =
                             context.getString(R.string.universal_search_settings_row_title)
@@ -642,15 +642,15 @@ private fun MainSettingsContent(
                     }
                 )
             }
-            Category(title = context.getString(R.string.settings_dock_section)) {
-                Preference(
+            OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.dock_settings)
                         override val icon = dockPreferenceIcon()
                         override val onClick = onOpenDock
                     }
                 )
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.search_bar_settings)
                         override val icon = settingsPreferenceIcon(
@@ -661,8 +661,8 @@ private fun MainSettingsContent(
                     }
                 )
             }
-            Category(title = context.getString(R.string.drawer_settings)) {
-                Preference(
+            OneUiCategory(title = context.getString(R.string.drawer_settings)) {
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.drawer_layout_settings)
                         override val icon = settingsPreferenceIcon(
@@ -675,7 +675,7 @@ private fun MainSettingsContent(
             }
             Category {
                 val release = SystemProperties.get("ro.uwu.release", "")
-                Preference(
+                OneUiPreference(
                     model = object : PreferenceModel {
                         override val title = context.getString(R.string.version_info)
                         override val icon = settingsPreferenceIcon(
@@ -699,7 +699,7 @@ private fun NotificationDotsPreference(context: Context) {
     val settingsCache = remember { SettingsCache.INSTANCE.get(context) }
     val enabled = remember { mutableStateOf(settingsCache.getValue(SettingsCache.NOTIFICATION_BADGING_URI)) }
 
-    Preference(
+    OneUiPreference(
         model =
             object : PreferenceModel {
                 override val title = context.getString(R.string.notification_dots_title)
@@ -728,7 +728,7 @@ private fun NavigationBarHintPreference(context: Context) {
         )
     }
 
-    SwitchPreference(
+    OneUiSwitchPreference(
         model = object : SwitchPreferenceModel {
             override val title = context.getString(R.string.navigation_bar_hint_title)
             override val icon = settingsPreferenceIcon(
@@ -757,7 +757,7 @@ private fun AddIconsToHomePreference(context: Context) {
         mutableStateOf(sharedPrefs.getBoolean(SessionCommitReceiver.ADD_ICON_PREFERENCE_KEY, true))
     }
 
-    SwitchPreference(
+    OneUiSwitchPreference(
         model =
             object : SwitchPreferenceModel {
                 override val title = context.getString(R.string.auto_add_shortcuts_label)
