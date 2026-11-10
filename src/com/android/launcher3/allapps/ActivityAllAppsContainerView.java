@@ -736,7 +736,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         removeCustomRules(rvContainer);
         removeCustomRules(getSearchRecyclerView());
-        if (isSearchBarFloating()) {
+        // The iOS-style drawer puts the search bar at the bottom, so the lists align to the top.
+        if (isSearchBarFloating() || isIosDrawer()) {
             alignParentTop(rvContainer, showTabs);
             alignParentTop(getSearchRecyclerView(), /* tabs= */ false);
         } else {
@@ -770,7 +771,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mAdditionalHeaderRows.forEach(row -> mHeader.onPluginConnected(row, mActivityContext));
 
         removeCustomRules(mHeader);
-        if (isSearchBarFloating()) {
+        if (isSearchBarFloating() || isIosDrawer()) {
             alignParentTop(mHeader, false /* includeTabsMargin */);
         } else {
             layoutBelowSearchContainer(mHeader, false /* includeTabsMargin */);
@@ -1492,6 +1493,47 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (chips != null && chips.getParent() instanceof View) {
             ((View) chips.getParent()).setVisibility(visibility);
         }
+        positionSearchBarForIosDrawer(iosStyle);
+    }
+
+    // True while the iOS-style drawer has moved the search bar to the bottom
+    private boolean mSearchBarMovedForIos;
+
+    private boolean isIosDrawer() {
+        return LauncherPrefs.get(getContext()).get(LauncherPrefs.IOS_APP_DRAWER);
+    }
+
+    /**
+     * iOS-style drawer: the search bar sits at the bottom, above the navigation bar. The
+     * default drawer keeps the search bar at the top.
+     */
+    private void positionSearchBarForIosDrawer(boolean iosStyle) {
+        if (mSearchContainer == null
+                || !(mSearchContainer.getLayoutParams() instanceof RelativeLayout.LayoutParams)) {
+            return;
+        }
+        // Leave the default layout (including the floating search bar's own position) alone
+        // unless the iOS-style drawer moved the bar earlier.
+        if (!iosStyle && !mSearchBarMovedForIos) {
+            return;
+        }
+        RelativeLayout.LayoutParams lp =
+                (RelativeLayout.LayoutParams) mSearchContainer.getLayoutParams();
+        int edgeMargin = (int) (16 * getResources().getDisplayMetrics().density);
+        if (iosStyle) {
+            lp.removeRule(RelativeLayout.ALIGN_PARENT_TOP);
+            lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            lp.topMargin = 0;
+            lp.bottomMargin = mInsets.bottom + edgeMargin;
+        } else {
+            lp.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+            lp.bottomMargin = 0;
+        }
+        mSearchBarMovedForIos = iosStyle;
+        mSearchContainer.setLayoutParams(lp);
+        // List padding uses the search bar's height, which is known only after layout.
+        mSearchContainer.post(() -> mAH.forEach(holder -> holder.applyPadding()));
     }
 
     private void updateAppCount() {
@@ -1809,7 +1851,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                         bottomOffset = mPrivateSpaceBottomExtraSpace;
                     }
                 }
-                if (isSearchBarFloating()) {
+                if (isSearchBarFloating() || isIosDrawer()) {
                     bottomOffset += mSearchContainer.getHeight();
                 }
                 mRecyclerView.setPadding(mPadding.left, mPadding.top, mPadding.right,
