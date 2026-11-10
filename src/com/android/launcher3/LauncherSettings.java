@@ -173,6 +173,12 @@ public class LauncherSettings {
         public static final int ITEM_TYPE_SYSTEM_DRAG = 15;
 
         /**
+         * A stack of widgets that share one home-screen cell. Its child widget ids are stored in
+         * the intent column, see {@link com.android.launcher3.widget.WidgetStack}.
+         */
+        public static final int ITEM_TYPE_WIDGET_STACK = 16;
+
+        /**
          * The custom icon bitmap.
          * <P>Type: BLOB</P>
          */
