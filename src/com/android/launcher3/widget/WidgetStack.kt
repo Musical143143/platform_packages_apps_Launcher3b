@@ -37,6 +37,21 @@ object WidgetStack {
         val ids = intentString.removePrefix(PREFIX).split(",").map {
             it.trim().toIntOrNull() ?: return null
         }
-        return ids.takeIf { it.isNotEmpty() }
+        // A widget can appear only once in a stack. A repeated id means the data is corrupt, so
+        // the item is skipped rather than shown with a widget twice.
+        if (ids.isEmpty() || ids.toSet().size != ids.size) {
+            return null
+        }
+        return ids
     }
+
+    /** The size of one widget in grid cells. */
+    data class CellSize(val spanX: Int, val spanY: Int)
+
+    /**
+     * Returns true when every widget in a stack has the same cell size. A stack shares one cell,
+     * so widgets of different sizes are not allowed to stack.
+     */
+    fun hasEqualSizes(sizes: List<CellSize>): Boolean =
+        sizes.isNotEmpty() && sizes.all { it == sizes.first() }
 }
