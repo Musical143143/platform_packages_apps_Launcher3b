@@ -84,6 +84,7 @@ import com.android.launcher3.DropTarget;
 import com.android.launcher3.ExtendedEditText;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.OnAlarmListener;
 import com.android.launcher3.R;
 import com.android.launcher3.ShortcutAndWidgetContainer;
@@ -272,6 +273,27 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     private KeyboardInsetAnimationCallback mKeyboardInsetAnimationCallback;
 
     private final @NonNull GradientDrawable mBackground;
+
+    /**
+     * Frosted folder background (opt-in, off by default): the same translucent fill and faint edge
+     * as the frosted search bar, and a blur behind the folder on Android 12 and later when the
+     * launcher's blur setting is on.
+     */
+    private void applyFrostedStyle() {
+        if (!LauncherPrefs.get(getContext()).get(LauncherPrefs.FROSTED_FOLDERS)) {
+            return;
+        }
+        float density = getResources().getDisplayMetrics().density;
+        mBackground.setColor(getContext().getColor(R.color.all_apps_search_frost));
+        mBackground.setStroke(
+                Math.max(1, (int) density),
+                getContext().getColor(R.color.all_apps_search_frost_stroke));
+        if (android.os.Build.VERSION.SDK_INT >= 31
+                && mActivityContext.isAllAppsBackgroundBlurEnabled()) {
+            setBackgroundBlurRadius(
+                    getResources().getDimensionPixelSize(R.dimen.all_apps_search_bar_blur_radius));
+        }
+    }
     private final BoxSelectionHelper mBoxSelectionHelper;
     private final BlurBackgroundHelper mBlurBackgroundHelper;
 
@@ -288,6 +310,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         setAlwaysDrawnWithCacheEnabled(false);
 
         mActivityContext = ActivityContext.lookupContext(context);
+        applyFrostedStyle();
         mLauncherDelegate = LauncherDelegate.from(mActivityContext);
 
         mStatsLogManager = StatsLogManager.newInstance(context);

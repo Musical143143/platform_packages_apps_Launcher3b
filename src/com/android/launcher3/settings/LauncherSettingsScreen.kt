@@ -643,6 +643,7 @@ private fun MainSettingsContent(
                 )
                 IosAppDrawerPreference(context)
                 StackedRecentsPreference(context)
+                FrostedFoldersPreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -719,6 +720,29 @@ private fun NotificationDotsPreference(context: Context) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                 }
             }
+    )
+}
+
+@Composable
+private fun FrostedFoldersPreference(context: Context) {
+    var enabled by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.FROSTED_FOLDERS))
+    }
+
+    OneUiSwitchPreference(
+        model = object : SwitchPreferenceModel {
+            override val title = context.getString(R.string.frosted_folders_title)
+            override val summary = { context.getString(R.string.frosted_folders_summary) }
+            override val icon = settingsPreferenceIcon(
+                Icons.Outlined.Search,
+                SettingsIconTone.Tertiary,
+            )
+            override val checked = { enabled }
+            override val onCheckedChange = { newChecked: Boolean ->
+                LauncherPrefs.get(context).put(LauncherPrefs.FROSTED_FOLDERS, newChecked)
+                enabled = newChecked
+            }
+        }
     )
 }
 

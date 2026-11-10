@@ -291,6 +291,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Stacked recents: cards further from the current page are drawn a little smaller. */
         @JvmField
         val STACKED_RECENTS = backedUpItem("stacked_recents", false)
+        /** Frosted glass folder background, with blur on Android 12 and later when enabled. */
+        @JvmField
+        val FROSTED_FOLDERS = backedUpItem("frosted_folders", false)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)
