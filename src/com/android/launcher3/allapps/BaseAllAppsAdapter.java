@@ -67,7 +67,9 @@ public abstract class BaseAllAppsAdapter
     public static final int VIEW_TYPE_PRIVATE_SPACE_SYS_APPS_DIVIDER = 1 << 7;
     public static final int VIEW_TYPE_BOTTOM_VIEW_TO_SCROLL_TO = 1 << 8;
     public static final int VIEW_TYPE_PRIVATE_SPACE_APP_ICON = 1 << 9;
-    public static final int NEXT_ID = 10;
+    // A category heading in the iOS-style app drawer
+    public static final int VIEW_TYPE_CATEGORY_HEADER = 1 << 10;
+    public static final int NEXT_ID = 11;
 
     // Common view type masks
     public static final int VIEW_TYPE_MASK_DIVIDER = VIEW_TYPE_ALL_APPS_DIVIDER;
@@ -109,6 +111,8 @@ public abstract class BaseAllAppsAdapter
         public AppInfo itemInfo = null;
         // Private App Decorator
         public SectionDecorationInfo decorationInfo = null;
+        // The category this heading represents, for VIEW_TYPE_CATEGORY_HEADER only
+        public AllAppsCategory category = null;
         public AdapterItem(int viewType) {
             this.viewType = viewType;
         }
@@ -258,6 +262,9 @@ public abstract class BaseAllAppsAdapter
             case VIEW_TYPE_PRIVATE_SPACE_HEADER:
                 return new ViewHolder(mLayoutInflater.inflate(
                         R.layout.private_space_header, parent, false));
+            case VIEW_TYPE_CATEGORY_HEADER:
+                return new ViewHolder(mLayoutInflater.inflate(
+                        R.layout.all_apps_category_header, parent, false));
             case VIEW_TYPE_BOTTOM_VIEW_TO_SCROLL_TO:
                 return new ViewHolder(new View(mActivityContext.asContext()));
             default:
@@ -349,10 +356,31 @@ public abstract class BaseAllAppsAdapter
             case VIEW_TYPE_WORK_EDU_CARD:
                 ((WorkEduCard) holder.itemView).setPosition(position);
                 break;
+            case VIEW_TYPE_CATEGORY_HEADER: {
+                AdapterItem categoryItem = mApps.getAdapterItems().get(position);
+                ((TextView) holder.itemView).setText(getCategoryTitleRes(categoryItem.category));
+                break;
+            }
             default:
                 if (mAdapterProvider.isViewSupported(holder.getItemViewType())) {
                     mAdapterProvider.onBindView(holder, position);
                 }
+        }
+    }
+
+    private static int getCategoryTitleRes(AllAppsCategory category) {
+        if (category == null) {
+            return R.string.all_apps_category_others;
+        }
+        switch (category) {
+            case COMMUNICATION:
+                return R.string.all_apps_category_communication;
+            case ENTERTAINMENT:
+                return R.string.all_apps_category_entertainment;
+            case TOOLS:
+                return R.string.all_apps_category_tools;
+            default:
+                return R.string.all_apps_category_others;
         }
     }
 

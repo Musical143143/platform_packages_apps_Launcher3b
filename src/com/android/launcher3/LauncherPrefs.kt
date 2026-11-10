@@ -285,6 +285,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         /** Shows a Universal Search button at the end of the home screen search bar. */
         @JvmField
         val UNIVERSAL_SEARCH_HOME_BUTTON = backedUpItem("universal_search_home_button", true)
+        /** Groups apps by category under headers, with no chips or A-Z index. */
+        @JvmField
+        val IOS_APP_DRAWER = backedUpItem("ios_app_drawer", false)
         @JvmField
         val TASKBAR_PINNING =
             backedUpItem(TASKBAR_PINNING_KEY, false, EncryptionType.DEVICE_PROTECTED)

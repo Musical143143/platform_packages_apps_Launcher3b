@@ -169,7 +169,8 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
     }
 
     private boolean matchesCategory(AppInfo info) {
-        if (mCategory == AllAppsCategory.ALL) {
+        // The iOS-style drawer groups every app, so the chip filter does not apply there.
+        if (mCategory == AllAppsCategory.ALL || isIosAppDrawerEnabled()) {
             return true;
         }
         if (info.componentName == null) {
@@ -182,6 +183,55 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
             mPackageCategories.put(packageName, category);
         }
         return AllAppsCategory.fromApplicationCategory(category) == mCategory;
+    }
+
+    private boolean isIosAppDrawerEnabled() {
+        return LauncherPrefs.get(mActivityContext.asContext()).get(LauncherPrefs.IOS_APP_DRAWER);
+    }
+
+    /** Returns the drawer category of an app, using the same cache as the chip filter. */
+    private AllAppsCategory categoryOf(AppInfo info) {
+        if (info.componentName == null) {
+            return AllAppsCategory.OTHERS;
+        }
+        String packageName = info.componentName.getPackageName();
+        Integer category = mPackageCategories.get(packageName);
+        if (category == null) {
+            category = lookupApplicationCategory(packageName);
+            mPackageCategories.put(packageName, category);
+        }
+        return AllAppsCategory.fromApplicationCategory(category);
+    }
+
+    /**
+     * iOS-style grouping: one heading per category that has apps, then that category's apps.
+     * Fast scroller sections are not added, because the A-Z index is hidden in this mode.
+     */
+    private int addAppsGroupedByCategory(List<AppInfo> appList, int startPosition) {
+        int position = startPosition;
+        for (AllAppsCategory category : AllAppsCategory.values()) {
+            if (category == AllAppsCategory.ALL) {
+                continue;
+            }
+            List<AppInfo> inCategory = new ArrayList<>();
+            for (AppInfo info : appList) {
+                if (categoryOf(info) == category) {
+                    inCategory.add(info);
+                }
+            }
+            if (inCategory.isEmpty()) {
+                continue;
+            }
+            AdapterItem heading = new AdapterItem(BaseAllAppsAdapter.VIEW_TYPE_CATEGORY_HEADER);
+            heading.category = category;
+            mAdapterItems.add(heading);
+            position++;
+            for (AppInfo info : inCategory) {
+                mAdapterItems.add(AdapterItem.asApp(info));
+                position++;
+            }
+        }
+        return position;
     }
 
     private int lookupApplicationCategory(String packageName) {
@@ -384,7 +434,11 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
                                     R.string.work_profile_edu_section), 0));
                     Log.d(TAG, "Adding FastScrollSection for work edu card.");
                 }
-                position = addAppsWithSections(mApps, position);
+                if (isIosAppDrawerEnabled()) {
+                    position = addAppsGroupedByCategory(mApps, position);
+                } else {
+                    position = addAppsWithSections(mApps, position);
+                }
             }
             if (Flags.enablePrivateSpace()) {
                 position = addPrivateSpaceItems(position);
@@ -411,6 +465,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
             for (AdapterItem item : mAdapterItems) {
                 item.rowIndex = 0;
                 if (BaseAllAppsAdapter.isDividerViewType(item.viewType)
+                        || item.viewType == BaseAllAppsAdapter.VIEW_TYPE_CATEGORY_HEADER
                         || BaseAllAppsAdapter.isPrivateSpaceHeaderView(item.viewType)
                         || BaseAllAppsAdapter.isPrivateSpaceSysAppsDividerView(item.viewType)) {
                     numAppsInSection = 0;

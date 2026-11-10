@@ -75,6 +75,7 @@ import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.InsettableFrameLayout;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
@@ -1047,6 +1048,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mPrivateProfileManager.reset();
         }
         updateAppCount();
+        updateIosAppDrawerLayout();
 
         mActivityContext.getStatsLogManager().logger()
                 .withCardinality(mAllAppsStore.getApps().length)
@@ -1469,6 +1471,29 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     /** Updates the "N apps" line under the title. Safe to call before the list exists. */
+    /**
+     * In the iOS-style drawer the category groups replace the chips and the A-Z index,
+     * so those views are hidden.
+     */
+    private void updateIosAppDrawerLayout() {
+        boolean iosStyle = LauncherPrefs.get(getContext()).get(LauncherPrefs.IOS_APP_DRAWER);
+        int visibility = iosStyle ? View.GONE : View.VISIBLE;
+        if (mFastScroller != null) {
+            mFastScroller.setVisibility(visibility);
+        }
+        if (mFastScrollLetterLayout != null) {
+            mFastScrollLetterLayout.setVisibility(visibility);
+        }
+        View popup = findViewById(R.id.fast_scroller_popup);
+        if (popup != null) {
+            popup.setVisibility(visibility);
+        }
+        View chips = findViewById(R.id.all_apps_category_chips);
+        if (chips != null && chips.getParent() instanceof View) {
+            ((View) chips.getParent()).setVisibility(visibility);
+        }
+    }
+
     private void updateAppCount() {
         TextView countView = findViewById(R.id.all_apps_count);
         AlphabeticalAppsList list = getPersonalAppListOrNull();

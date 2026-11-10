@@ -641,6 +641,7 @@ private fun MainSettingsContent(
                         override val onClick = onOpenUniversalSearchSettings
                     }
                 )
+                IosAppDrawerPreference(context)
             }
             OneUiCategory(title = context.getString(R.string.settings_dock_section)) {
                 OneUiPreference(
@@ -717,6 +718,29 @@ private fun NotificationDotsPreference(context: Context) {
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                 }
             }
+    )
+}
+
+@Composable
+private fun IosAppDrawerPreference(context: Context) {
+    var enabled by remember(context) {
+        mutableStateOf(LauncherPrefs.get(context).get(LauncherPrefs.IOS_APP_DRAWER))
+    }
+
+    OneUiSwitchPreference(
+        model = object : SwitchPreferenceModel {
+            override val title = context.getString(R.string.ios_app_drawer_title)
+            override val summary = { context.getString(R.string.ios_app_drawer_summary) }
+            override val icon = settingsPreferenceIcon(
+                Icons.Outlined.Search,
+                SettingsIconTone.Tertiary,
+            )
+            override val checked = { enabled }
+            override val onCheckedChange = { newChecked: Boolean ->
+                LauncherPrefs.get(context).put(LauncherPrefs.IOS_APP_DRAWER, newChecked)
+                enabled = newChecked
+            }
+        }
     )
 }
 
